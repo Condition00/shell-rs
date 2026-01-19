@@ -26,26 +26,35 @@ fn main() {
         match cmd {
             "cd" => {
                 if args.is_empty() {
-                    eprintln!("cd: missing opperand");
+                    eprintln!("cd: missing operand");
                     continue;
                 }
 
-                let dir = args[0];
+                let mut dir = args[0].to_string();
 
-                //abs paths for now
+                // ~
 
-                if !dir.starts_with("/") {
-                    eprintln!("cd: {}: No such file or directory", dir);
-                    continue;
+                if dir.starts_with("~") {
+                    if let Ok(home) = std::env::var("HOME") {
+                        if dir == "~" {
+                            dir = home;
+                        } else if dir.starts_with("~/") {
+                            dir = format!("{}/{}", home, &dir[2..]);
+                        } else {
+                            eprintln!("cd: HOME not set");
+                            continue;
+                        }
+                    }
                 }
 
-                match std::env::set_current_dir(dir) {
+                match std::env::set_current_dir(&dir) {
                     Ok(_) => {}
                     Err(_) => {
                         eprintln!("cd: {}: No such file or directory", dir);
                     }
                 }
             }
+
             "exit" => process::exit(0),
             "echo" => {
                 println!("{}", args.join(" "));
@@ -99,3 +108,4 @@ fn main() {
         }
     }
 }
+
